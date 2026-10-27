@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>計數鴨 - 郵差派遞加班時數計算工具</title>
+    <title>計數鴨 - 郵差派遞加班時數計算器</title>
     <style>
         :root {
-            /* 香港郵政主題顏色 */
+            /* 香港郵政主題顏色：取自圖片1的深藍、郵政藍與綠色 */
             --primary-dark: #1b264f;
             --primary-blue: #005a9c;
             --primary-green: #009865;
@@ -93,20 +92,6 @@
 
         .tab-content.active {
             display: block;
-        }
-
-        /* 紅色粗框警告樣式 */
-        .warning-box {
-            border: 3px solid #c0392b;
-            background-color: #fdf2f2;
-            color: #000000;
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-            line-height: 1.4;
         }
 
         .form-group {
@@ -340,11 +325,6 @@
 
 <!-- ================= 頁面 1: 加班計算 ================= -->
 <div id="calcTab" class="tab-content active">
-    <!-- 紅色粗框警告 -->
-    <div class="warning-box">
-        此計算結果只供參考，如與幫辦報數出現誤差，應已幫辦為準
-    </div>
-
     <div class="route-selector">
         <label for="selectRoute">選擇派遞路線：</label>
         <select id="selectRoute" onchange="onSelectRouteChanged()">
@@ -393,7 +373,7 @@
 
         <!-- 第 4 部份 -->
         <section>
-            <h3>第 4 部份：可追查郵件 (掛號郵件)</h3>
+            <h3>第 4 部份：可追查郵件</h3>
             <div class="form-group">
                 <label>可追查郵件實際數量 (每件 2.5 分鐘)</label>
                 <input type="number" id="actTrackable" value="0" min="0">
@@ -433,7 +413,7 @@
     </form>
 
     <div id="resultBox" class="result-box" style="display:none;">
-        <div class="result-title">最終派遞時間</div>
+        <div class="result-title">預計所需加班時間</div>
         <div class="result-value" id="totalOTMin">0 分鐘</div>
         <div class="result-sub" id="totalOTHr">(約 0 小時 0 分鐘)</div>
 
@@ -526,16 +506,19 @@
             <thead>
                 <tr>
                     <th style="width: 15%;">項目 / 行</th>
+                    <!-- 10 columns for 10 ads -->
                     <th>第1款</th><th>第2款</th><th>第3款</th><th>第4款</th><th>第5款</th>
                     <th>第6款</th><th>第7款</th><th>第8款</th><th>第9款</th><th>第10款</th>
                 </tr>
             </thead>
             <tbody>
+                <!-- 第 1 行：第幾款廣告 (Header already indicates, but row 1 can be label or merged) -->
                 <tr>
                     <td style="font-weight:bold; background:#f0f4f8;">第1行：廣告編號</td>
                     <td>第1款</td><td>第2款</td><td>第3款</td><td>第4款</td><td>第5款</td>
                     <td>第6款</td><td>第7款</td><td>第8款</td><td>第9款</td><td>第10款</td>
                 </tr>
+                <!-- 第 2 行：派遞比率 (item per minute) -->
                 <tr>
                     <td style="font-weight:bold; background:#f0f4f8;">第2行：派遞比率<br><span style="font-size:0.75rem; color:#666;">(item/min)</span></td>
                     <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
@@ -549,6 +532,7 @@
                     <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
                     <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
                 </tr>
+                <!-- 第 3 行：廣告數量 + 總數 -->
                 <tr>
                     <td style="font-weight:bold; background:#f0f4f8;">第3行：廣告數量<br><span id="totalCircQty" style="font-size:0.8rem; color:var(--primary-green); font-weight:bold;">總數: 0</span></td>
                     <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
@@ -562,6 +546,7 @@
                     <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
                     <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
                 </tr>
+                <!-- 第 4 行：所需時間 (分鐘) + 總數 -->
                 <tr>
                     <td style="font-weight:bold; background:#f0f4f8;">第4行：所需時間<br><span id="totalCircTime" style="font-size:0.8rem; color:var(--primary-green); font-weight:bold;">總數: 0.0 分</span></td>
                     <td class="cir-time-cell">0.0</td>
@@ -612,6 +597,7 @@
 </div>
 
 <script>
+    // 路線資料結構 (最多3條)
     let routes = JSON.parse(localStorage.getItem('postal_routes_duck')) || {
         1: null,
         2: null,
@@ -629,6 +615,7 @@
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
         document.getElementById(tabId).classList.add('active');
+        // Find matching tab button
         event.currentTarget.classList.add('active');
 
         if(tabId === 'calcTab') {
@@ -636,6 +623,7 @@
         }
     }
 
+    // 初始化路線下拉選單
     function initRouteDropdowns() {
         const select = document.getElementById('selectRoute');
         const currentVal = select.value;
@@ -652,6 +640,7 @@
         if(currentVal) select.value = currentVal;
     }
 
+    // 載入設定頁面的路線資料
     function loadRouteToForm() {
         const slot = document.getElementById('routeSlot').value;
         const r = routes[slot];
@@ -674,6 +663,7 @@
         }
     }
 
+    // 儲存路線
     function saveRoute() {
         const slot = document.getElementById('routeSlot').value;
         const name = document.getElementById('routeName').value.trim() || `路線 ${slot}`;
@@ -699,6 +689,7 @@
         initRouteDropdowns();
     }
 
+    // 重置路線表單
     function resetRouteForm(confirmNeeded = true) {
         if (confirmNeeded && !confirm("確定要重置欄位嗎？")) return;
         document.getElementById('routeName').value = '';
@@ -723,6 +714,7 @@
         document.getElementById('resultBox').style.display = 'none';
     }
 
+    // 主要加班計算邏輯
     function calculateOT() {
         const routeSlot = document.getElementById('selectRoute').value;
         if (!routeSlot) {
@@ -732,7 +724,7 @@
 
         const r = routes[routeSlot];
 
-        // 第 1 部份
+        // 第 1 部份：機料實際扣500選項
         let actMachine = parseFloat(document.getElementById('actMachine').value) || 0;
         const isMinus500 = document.getElementById('minus500').checked;
         if (isMinus500) {
@@ -748,15 +740,16 @@
         const actFlat = parseFloat(document.getElementById('actFlat').value) || 0;
         const part2 = (actFlat - r.baseFlat) / (r.rateFlat || 1);
 
-        // 第 3 部份 (每件 2 分鐘)
+        // 第 3 部份：小郵包改為每件 2 分鐘
         const actPacket = parseFloat(document.getElementById('actPacket').value) || 0;
         const part3 = (actPacket - r.basePacket) * 2.0;
 
-        // 第 4 部份 (獨立計算：掛號郵件派遞時間)
+        // 第 4 部份
         const actTrackable = parseFloat(document.getElementById('actTrackable').value) || 0;
-        const part4 = (actTrackable - r.baseTrackable) * 2.5;
+        let part4 = (actTrackable - r.baseTrackable) * 2.5;
+        if (part4 < 0) part4 = 0; // 第 4 部份少於 0 當作 0
 
-        // 第 5 部份 (10款廣告)
+        // 第 5 部份：10款廣告
         let part5 = 0;
         let p5Details = [];
         for(let i=1; i<=10; i++) {
@@ -772,10 +765,11 @@
         // 第 6 部份
         const part6 = parseFloat(document.getElementById('remarkMinutes').value) || 0;
 
-        // 不包含掛號郵件派遞時間 = 第 1, 2, 3, 5, 6 部份相加 (取消少於0歸零規定)
-        const partGroupA = part1 + part2 + part3 + part5 + part6;
+        // 計算第 1, 2, 3, 5, 6 部份相加
+        let partGroupA = part1 + part2 + part3 + part5 + part6;
+        if (partGroupA < 0) partGroupA = 0; // 如總數少於 0 當作 0
 
-        // 最終派遞時間 = 所有部份相加 (partGroupA + part4)
+        // 最終總加班分鐘數
         const totalOT = partGroupA + part4;
 
         // 顯示結果
@@ -795,16 +789,21 @@
             • 第 5 部份 (通函): ${part5.toFixed(1)} 分鐘 ${p5Details.length ? `[${p5Details.join(', ')}]` : ''}<br>
             • 第 6 部份 (Remark): ${part6.toFixed(1)} 分鐘<br>
             ------------------------------------<br>
-            <strong>不包含掛號郵件派遞時間 (1+2+3+5+6): ${partGroupA.toFixed(1)} 分鐘</strong><br><br>
-            • 掛號郵件派遞時間 (第 4 部份): ${part4.toFixed(1)} 分鐘<br>
+            <strong>小計 (1+2+3+5+6,): ${partGroupA.toFixed(1)} 分鐘</strong><br><br>
+            • 第 4 部份 (可追查,): ${part4.toFixed(1)} 分鐘<br>
             ------------------------------------<br>
-            <strong>最終派遞時間: ${totalOT.toFixed(1)} 分鐘</strong>
+            <strong>最終總加班時間: ${totalOT.toFixed(1)} 分鐘</strong>
         `;
 
-        // 建議如何改變小郵包或薄雞實際數量達到 1小時、1.5小時 和 2小時
+        // 建議如何改變小郵包或薄雞實際數量達到 1小時(60分)、1.5小時(90分) 和 2小時(120分) 加班
+        // 現有固定其他部分分值 = totalOT (或者以現有 GroupA + Part4 為基礎進行調整)
+        // 為了達到目標總分鐘數 targetMin，我們看差額：
+        // 差額 diff = targetMin - totalOT
+        // 若改變小郵包 (每件 2 分鐘)：所需增減件數 = diff / 2.0
+        // 若改變薄雞 (處理率為 r.rateLetter)：所需增減件數 = diff * r.rateLetter
         let targets = [60, 90, 120];
         let targetLabels = ["1 小時 (60分鐘)", "1.5 小時 (90分鐘)", "2 小時 (120分鐘)"];
-        let recHTML = `<strong>💡 達到特定派遞時間的數量調整建議：</strong><br>`;
+        let recHTML = `<strong>💡 達到特定加班時間的數量調整建議：</strong><br>`;
         
         for(let idx=0; idx<targets.length; idx++) {
             let targetMin = targets[idx];
@@ -821,6 +820,7 @@
         document.getElementById('recommendationBox').innerHTML = recHTML;
     }
 
+    // 郵政通函頁面互動表格計算
     function updateCircularTable() {
         const rates = document.querySelectorAll('.cir-rate');
         const qtys = document.querySelectorAll('.cir-qty');
@@ -844,6 +844,7 @@
         document.getElementById('totalCircTime').textContent = `總數: ${totalTime.toFixed(1)} 分`;
     }
 
+    // 時間換算工具邏輯 (Quantity × Rate = Time)
     function calculateConverter(source) {
         let tElem = document.getElementById('convTime');
         let qElem = document.getElementById('convQty');
@@ -854,6 +855,7 @@
         let r = parseFloat(rElem.value);
 
         if (source === 'time' || source === 'qty') {
+            // If Time and Qty are provided, and Rate is empty/changed
             if (!isNaN(t) && !isNaN(q) && q > 0) {
                 r = t / q;
                 rElem.value = r.toFixed(2);
