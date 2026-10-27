@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>計數鴨 - 郵差派遞加班時數計算工具</title>
+    <style>
+        :root {
+            /* 香港郵政主題顏色 */
+            --primary-dark: #1b264f;
+            --primary-blue: #005a9c;
+            --primary-green: #009865;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #cccccc;
+            --accent-color: #e67e22;
+            --success-color: #009865;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 15px;
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 15px 0;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue));
+            color: white;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #e0e0e0;
+            border-bottom: 3px solid var(--primary-green);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 90px;
+            padding: 12px 8px;
+            text-align: center;
+            background: none;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #555;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--primary-blue);
+            border-bottom: 4px solid var(--primary-green);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 紅色粗框警告樣式 */
+        .warning-box {
+            border: 3px solid #c0392b;
+            background-color: #fdf2f2;
+            color: #000000;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--primary-dark);
+        }
+
+        input[type="number"], input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.2);
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        @media (min-width: 600px) {
+            .grid-4 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        section {
+            background: #fafafa;
+            border: 1px solid #e9e9e9;
+            padding: 14px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        section h3 {
+            font-size: 1.05rem;
+            color: var(--primary-blue);
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 5px;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #004070;
+        }
+
+        .btn-reset {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-calc {
+            background: var(--primary-green);
+            color: white;
+            font-size: 1.1rem;
+        }
+        .btn-calc:hover {
+            background: #007a51;
+        }
+
+        .result-box {
+            background: #eefaf6;
+            border: 2px solid var(--primary-green);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            color: var(--primary-green);
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+
+        .result-sub {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 5px;
+        }
+
+        .detail-breakdown {
+            margin-top: 15px;
+            text-align: left;
+            font-size: 0.88rem;
+            background: #fff;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .recommendation-box {
+            margin-top: 12px;
+            text-align: left;
+            font-size: 0.88rem;
+            background: #fffbf0;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #f39c12;
+        }
+
+        .route-selector {
+            background: #e8f4fc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #b6d4fe;
+        }
+
+        /* 郵政通函表格樣式 */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+
+        .circular-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            background: white;
+            min-width: 600px;
+        }
+
+        .circular-table th, .circular-table td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        .circular-table th {
+            background-color: var(--primary-blue);
+            color: white;
+            font-weight: 600;
+        }
+
+        .circular-table input {
+            padding: 6px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .table-disclaimer {
+            font-size: 0.85rem;
+            color: #c0392b;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #fdf2f2;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🦆 計數鴨</h1>
+    <p>郵差派遞加班時數計算工具</p>
+</header>
+
+<div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('calcTab')">加班計算</button>
+    <button class="tab-btn" onclick="switchTab('routeTab')">建立路線</button>
+    <button class="tab-btn" onclick="switchTab('circularTab')">郵政通函</button>
+    <button class="tab-btn" onclick="switchTab('converterTab')">時間換算</button>
+</div>
+
+<!-- ================= 頁面 1: 加班計算 ================= -->
+<div id="calcTab" class="tab-content active">
+    <!-- 紅色粗框警告 -->
+    <div class="warning-box">
+        此計算結果只供參考，如與幫辦報數出現誤差，應已幫辦為準
+    </div>
+
+    <div class="route-selector">
+        <label for="selectRoute">選擇派遞路線：</label>
+        <select id="selectRoute" onchange="onSelectRouteChanged()">
+            <option value="">-- 請選擇已建立的路線 --</option>
+        </select>
+    </div>
+
+    <form id="calcForm">
+        <!-- 第 1 部份 -->
+        <section>
+            <h3>第 1 部份：普通信件</h3>
+            <div class="grid-4" style="margin-bottom:10px;">
+                <div class="form-group" style="grid-column: span 3;">
+                    <label>機料實際數量</label>
+                    <input type="number" id="actMachine" value="0" min="0">
+                </div>
+                <div class="form-group" style="display:flex; align-items:flex-end; padding-bottom:5px;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="minus500" onchange="calculateOT()"> 扣 500
+                    </label>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>手料實際數量</label><input type="number" id="actHand" value="0" min="0"></div>
+                <div class="form-group"><label>薄雞實際數量</label><input type="number" id="actThin" value="0" min="0"></div>
+            </div>
+        </section>
+
+        <!-- 第 2 部份 -->
+        <section>
+            <h3>第 2 部份：扁平郵件</h3>
+            <div class="form-group">
+                <label>扁平郵件實際數量</label>
+                <input type="number" id="actFlat" value="0" min="0">
+            </div>
+        </section>
+
+        <!-- 第 3 部份 -->
+        <section>
+            <h3>第 3 部份：小郵包</h3>
+            <div class="form-group">
+                <label>小郵包實際數量 (每件 2.0 分鐘)</label>
+                <input type="number" id="actPacket" value="0" min="0">
+            </div>
+        </section>
+
+        <!-- 第 4 部份 -->
+        <section>
+            <h3>第 4 部份：可追查郵件 (掛號郵件)</h3>
+            <div class="form-group">
+                <label>可追查郵件實際數量 (每件 2.5 分鐘)</label>
+                <input type="number" id="actTrackable" value="0" min="0">
+            </div>
+        </section>
+
+        <!-- 第 5 部份 -->
+        <section>
+            <h3>第 5 部份：郵政通函 (10 款廣告實際數量)</h3>
+            <div class="grid-4">
+                <div class="form-group"><label>第 1 款</label><input type="number" id="actC1" value="0" min="0" class="act-c"></div>
+                <div class="form-group"><label>第 2 款</label><input type="number" id="actC2" value="0" min="0" class="act-c"></div>
+                <div class="form-group"><label>第 3 款</label><input type="number" id="actC3" value="0" min="0" class="act-c"></div>
+                <div class="form-group"><label>第 4 款</label><input type="number" id="actC4" value="0" min="0" class="act-c"></div>
+                <div class="form-group"><label>第 5 款</label><input type="number" id="actC5" value="0" min="0" class="act-c"></div>
+                <div class="form-group"><label>第 6 款</label><input type="number" id="actC6" value="0" min="0" class="act-c"></div>
+                <div class="form-group"><label>第 7 款</label><input type="number" id="actC7" value="0" min="0" class="act-c"></div>
+                <div class="form-group"><label>第 8 款</label><input type="number" id="actC8" value="0" min="0" class="act-c"></div>
+                <div class="form-group"><label>第 9 款</label><input type="number" id="actC9" value="0" min="0" class="act-c"></div>
+                <div class="form-group"><label>第 10 款</label><input type="number" id="actC10" value="0" min="0" class="act-c"></div>
+            </div>
+        </section>
+
+        <!-- 第 6 部份 -->
+        <section>
+            <h3>第 6 部份：備註 (Remark)</h3>
+            <div class="form-group">
+                <label>特定情況增加/減少之分鐘數 (可輸入負數)</label>
+                <input type="number" id="remarkMinutes" value="0" step="0.5">
+            </div>
+        </section>
+
+        <div class="btn-container">
+            <button type="button" class="btn btn-reset" onclick="resetCalcForm()">重置輸入</button>
+            <button type="button" class="btn btn-calc" onclick="calculateOT()">計算加班時間</button>
+        </div>
+    </form>
+
+    <div id="resultBox" class="result-box" style="display:none;">
+        <div class="result-title">最終派遞時間</div>
+        <div class="result-value" id="totalOTMin">0 分鐘</div>
+        <div class="result-sub" id="totalOTHr">(約 0 小時 0 分鐘)</div>
+
+        <div class="detail-breakdown" id="detailBreakdown"></div>
+        <div class="recommendation-box" id="recommendationBox"></div>
+    </div>
+</div>
+
+<!-- ================= 頁面 2: 建立路線 ================= -->
+<div id="routeTab" class="tab-content">
+    <div class="form-group">
+        <label for="routeSlot">選擇儲存位置（最多 3 條路線）：</label>
+        <select id="routeSlot" onchange="loadRouteToForm()">
+            <option value="1">路線 1</option>
+            <option value="2">路線 2</option>
+            <option value="3">路線 3</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="routeName">路線名稱：</label>
+        <input type="text" id="routeName" placeholder="例如：中環 Route 01">
+    </div>
+
+    <section>
+        <h3>信件與底數設定</h3>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="baseLetter">信件底數：</label>
+                <input type="number" id="baseLetter" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label for="rateLetter">信件處理率 (件/分鐘)：</label>
+                <input type="number" id="rateLetter" value="20" min="0.1" step="0.1">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="baseFlat">扁平郵件底數：</label>
+                <input type="number" id="baseFlat" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label for="rateFlat">扁平處理率 (件/分鐘)：</label>
+                <input type="number" id="rateFlat" value="10" min="0.1" step="0.1">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="basePacket">小郵包底數：</label>
+                <input type="number" id="basePacket" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label for="baseTrackable">可追查郵件底數：</label>
+                <input type="number" id="baseTrackable" value="0" min="0">
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h3>10 款郵政通函派遞比率（每分鐘派遞件數 item per minute）</h3>
+        <div class="grid-4" style="margin-top:5px;">
+            <div class="form-group"><label>第 1 款比率</label><input type="number" id="rateC1" value="10" min="0.1" step="0.1"></div>
+            <div class="form-group"><label>第 2 款比率</label><input type="number" id="rateC2" value="10" min="0.1" step="0.1"></div>
+            <div class="form-group"><label>第 3 款比率</label><input type="number" id="rateC3" value="10" min="0.1" step="0.1"></div>
+            <div class="form-group"><label>第 4 款比率</label><input type="number" id="rateC4" value="10" min="0.1" step="0.1"></div>
+            <div class="form-group"><label>第 5 款比率</label><input type="number" id="rateC5" value="10" min="0.1" step="0.1"></div>
+            <div class="form-group"><label>第 6 款比率</label><input type="number" id="rateC6" value="10" min="0.1" step="0.1"></div>
+            <div class="form-group"><label>第 7 款比率</label><input type="number" id="rateC7" value="10" min="0.1" step="0.1"></div>
+            <div class="form-group"><label>第 8 款比率</label><input type="number" id="rateC8" value="10" min="0.1" step="0.1"></div>
+            <div class="form-group"><label>第 9 款比率</label><input type="number" id="rateC9" value="10" min="0.1" step="0.1"></div>
+            <div class="form-group"><label>第 10 款比率</label><input type="number" id="rateC10" value="10" min="0.1" step="0.1"></div>
+        </div>
+    </section>
+
+    <div class="btn-container">
+        <button class="btn btn-reset" onclick="resetRouteForm()">重置</button>
+        <button class="btn btn-primary" onclick="saveRoute()">儲存路線</button>
+    </div>
+</div>
+
+<!-- ================= 頁面 3: 郵政通函 ================= -->
+<div id="circularTab" class="tab-content">
+    <h3 style="color: var(--primary-blue); margin-bottom: 10px;">郵政通函派遞時間計算表</h3>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">在此輸入各款廣告的派遞比率與實際數量，系統將自動計算所需分鐘及總計。</p>
+    
+    <div class="table-responsive">
+        <table class="circular-table" id="circularMatrixTable">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">項目 / 行</th>
+                    <th>第1款</th><th>第2款</th><th>第3款</th><th>第4款</th><th>第5款</th>
+                    <th>第6款</th><th>第7款</th><th>第8款</th><th>第9款</th><th>第10款</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-weight:bold; background:#f0f4f8;">第1行：廣告編號</td>
+                    <td>第1款</td><td>第2款</td><td>第3款</td><td>第4款</td><td>第5款</td>
+                    <td>第6款</td><td>第7款</td><td>第8款</td><td>第9款</td><td>第10款</td>
+                </tr>
+                <tr>
+                    <td style="font-weight:bold; background:#f0f4f8;">第2行：派遞比率<br><span style="font-size:0.75rem; color:#666;">(item/min)</span></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-rate" value="10" min="0.1" step="0.1" oninput="updateCircularTable()"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:bold; background:#f0f4f8;">第3行：廣告數量<br><span id="totalCircQty" style="font-size:0.8rem; color:var(--primary-green); font-weight:bold;">總數: 0</span></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                    <td><input type="number" class="cir-qty" value="0" min="0" oninput="updateCircularTable()"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:bold; background:#f0f4f8;">第4行：所需時間<br><span id="totalCircTime" style="font-size:0.8rem; color:var(--primary-green); font-weight:bold;">總數: 0.0 分</span></td>
+                    <td class="cir-time-cell">0.0</td>
+                    <td class="cir-time-cell">0.0</td>
+                    <td class="cir-time-cell">0.0</td>
+                    <td class="cir-time-cell">0.0</td>
+                    <td class="cir-time-cell">0.0</td>
+                    <td class="cir-time-cell">0.0</td>
+                    <td class="cir-time-cell">0.0</td>
+                    <td class="cir-time-cell">0.0</td>
+                    <td class="cir-time-cell">0.0</td>
+                    <td class="cir-time-cell">0.0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-disclaimer">
+        以上計算只包含派遞時間不包括用饍時間，交通時間和其他工作時間。
+    </div>
+</div>
+
+<!-- ================= 頁面 4: 時間換算 ================= -->
+<div id="converterTab" class="tab-content">
+    <h3 style="color: var(--primary-blue); margin-bottom: 10px;">派遞時間與數量換算工具</h3>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">公式：<strong>數量 × 每件派遞所需時間 = 時間 (分鐘)</strong><br>請任意輸入其中<strong>兩項</strong>數值，系統會自動幫你計算出剩下的一項！</p>
+
+    <section>
+        <div class="form-group">
+            <label for="convTime">時間 (分鐘)：</label>
+            <input type="number" id="convTime" placeholder="例如：60" step="0.1" oninput="calculateConverter('time')">
+        </div>
+
+        <div class="form-group">
+            <label for="convQty">數量 (件數)：</label>
+            <input type="number" id="convQty" placeholder="例如：100" step="1" oninput="calculateConverter('qty')">
+        </div>
+
+        <div class="form-group">
+            <label for="convRate">每件派遞所需時間 (分鐘/件，即 minute per item)：</label>
+            <input type="number" id="convRate" placeholder="例如：0.5" step="0.01" oninput="calculateConverter('rate')">
+        </div>
+
+        <div class="btn-container">
+            <button type="button" class="btn btn-reset" onclick="resetConverter()">清除重置</button>
+        </div>
+    </section>
+</div>
+
+<script>
+    let routes = JSON.parse(localStorage.getItem('postal_routes_duck')) || {
+        1: null,
+        2: null,
+        3: null
+    };
+
+    window.onload = function() {
+        initRouteDropdowns();
+        loadRouteToForm();
+        updateCircularTable();
+    };
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+
+        if(tabId === 'calcTab') {
+            initRouteDropdowns();
+        }
+    }
+
+    function initRouteDropdowns() {
+        const select = document.getElementById('selectRoute');
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">-- 請選擇已建立的路線 --</option>';
+
+        for (let i = 1; i <= 3; i++) {
+            const r = routes[i];
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = r ? `路線 ${i}: ${r.name}` : `路線 ${i}: (未設定)`;
+            if (!r) opt.disabled = true;
+            select.appendChild(opt);
+        }
+        if(currentVal) select.value = currentVal;
+    }
+
+    function loadRouteToForm() {
+        const slot = document.getElementById('routeSlot').value;
+        const r = routes[slot];
+
+        if (r) {
+            document.getElementById('routeName').value = r.name || '';
+            document.getElementById('baseLetter').value = r.baseLetter || 0;
+            document.getElementById('rateLetter').value = r.rateLetter || 20;
+            document.getElementById('baseFlat').value = r.baseFlat || 0;
+            document.getElementById('rateFlat').value = r.rateFlat || 10;
+            document.getElementById('basePacket').value = r.basePacket || 0;
+            document.getElementById('baseTrackable').value = r.baseTrackable || 0;
+
+            for(let i=1; i<=10; i++) {
+                document.getElementById(`rateC${i}`).value = (r.rates && r.rates[i]) !== undefined ? r.rates[i] : 10;
+            }
+        } else {
+            resetRouteForm(false);
+            document.getElementById('routeName').value = `路線 ${slot}`;
+        }
+    }
+
+    function saveRoute() {
+        const slot = document.getElementById('routeSlot').value;
+        const name = document.getElementById('routeName').value.trim() || `路線 ${slot}`;
+
+        let ratesObj = {};
+        for(let i=1; i<=10; i++) {
+            ratesObj[i] = parseFloat(document.getElementById(`rateC${i}`).value) || 10;
+        }
+
+        routes[slot] = {
+            name: name,
+            baseLetter: parseFloat(document.getElementById('baseLetter').value) || 0,
+            rateLetter: parseFloat(document.getElementById('rateLetter').value) || 20,
+            baseFlat: parseFloat(document.getElementById('baseFlat').value) || 0,
+            rateFlat: parseFloat(document.getElementById('rateFlat').value) || 10,
+            basePacket: parseFloat(document.getElementById('basePacket').value) || 0,
+            baseTrackable: parseFloat(document.getElementById('baseTrackable').value) || 0,
+            rates: ratesObj
+        };
+
+        localStorage.setItem('postal_routes_duck', JSON.stringify(routes));
+        alert(`路線 [${name}] 已成功儲存於位置 ${slot}！`);
+        initRouteDropdowns();
+    }
+
+    function resetRouteForm(confirmNeeded = true) {
+        if (confirmNeeded && !confirm("確定要重置欄位嗎？")) return;
+        document.getElementById('routeName').value = '';
+        document.getElementById('baseLetter').value = 0;
+        document.getElementById('rateLetter').value = 20;
+        document.getElementById('baseFlat').value = 0;
+        document.getElementById('rateFlat').value = 10;
+        document.getElementById('basePacket').value = 0;
+        document.getElementById('baseTrackable').value = 0;
+
+        for(let i=1; i<=10; i++) {
+            document.getElementById(`rateC${i}`).value = 10;
+        }
+    }
+
+    function onSelectRouteChanged() {
+        document.getElementById('resultBox').style.display = 'none';
+    }
+
+    function resetCalcForm() {
+        document.getElementById('calcForm').reset();
+        document.getElementById('resultBox').style.display = 'none';
+    }
+
+    function calculateOT() {
+        const routeSlot = document.getElementById('selectRoute').value;
+        if (!routeSlot) {
+            alert('請先選擇一條派遞路線！');
+            return;
+        }
+
+        const r = routes[routeSlot];
+
+        // 第 1 部份
+        let actMachine = parseFloat(document.getElementById('actMachine').value) || 0;
+        const isMinus500 = document.getElementById('minus500').checked;
+        if (isMinus500) {
+            actMachine = Math.max(0, actMachine - 500);
+        }
+
+        const actHand = parseFloat(document.getElementById('actHand').value) || 0;
+        const actThin = parseFloat(document.getElementById('actThin').value) || 0;
+        const totalLetter = actMachine + actHand + actThin;
+        const part1 = (totalLetter - r.baseLetter) / (r.rateLetter || 1);
+
+        // 第 2 部份
+        const actFlat = parseFloat(document.getElementById('actFlat').value) || 0;
+        const part2 = (actFlat - r.baseFlat) / (r.rateFlat || 1);
+
+        // 第 3 部份 (每件 2 分鐘)
+        const actPacket = parseFloat(document.getElementById('actPacket').value) || 0;
+        const part3 = (actPacket - r.basePacket) * 2.0;
+
+        // 第 4 部份 (獨立計算：掛號郵件派遞時間)
+        const actTrackable = parseFloat(document.getElementById('actTrackable').value) || 0;
+        const part4 = (actTrackable - r.baseTrackable) * 2.5;
+
+        // 第 5 部份 (10款廣告)
+        let part5 = 0;
+        let p5Details = [];
+        for(let i=1; i<=10; i++) {
+            const count = parseFloat(document.getElementById(`actC${i}`).value) || 0;
+            const rate = (r.rates && r.rates[i]) || 10;
+            if (count > 0) {
+                const mins = count / rate;
+                part5 += mins;
+                p5Details.push(`第${i}款: ${count}件 (${mins.toFixed(1)}分)`);
+            }
+        }
+
+        // 第 6 部份
+        const part6 = parseFloat(document.getElementById('remarkMinutes').value) || 0;
+
+        // 不包含掛號郵件派遞時間 = 第 1, 2, 3, 5, 6 部份相加 (取消少於0歸零規定)
+        const partGroupA = part1 + part2 + part3 + part5 + part6;
+
+        // 最終派遞時間 = 所有部份相加 (partGroupA + part4)
+        const totalOT = partGroupA + part4;
+
+        // 顯示結果
+        document.getElementById('resultBox').style.display = 'block';
+        document.getElementById('totalOTMin').textContent = `${totalOT.toFixed(1)} 分鐘`;
+
+        const hrs = Math.floor(totalOT / 60);
+        const mins = Math.round(totalOT % 60);
+        document.getElementById('totalOTHr').textContent = `(約 ${hrs} 小時 ${mins} 分鐘)`;
+
+        // 呈現詳細明細
+        document.getElementById('detailBreakdown').innerHTML = `
+            <strong>各部份計算明細：</strong><br>
+            • 第 1 部份 (信件${isMinus500 ? ', 已扣500機料' : ''}): ${part1.toFixed(1)} 分鐘<br>
+            • 第 2 部份 (扁平): ${part2.toFixed(1)} 分鐘<br>
+            • 第 3 部份 (小郵包 @2分): ${part3.toFixed(1)} 分鐘<br>
+            • 第 5 部份 (通函): ${part5.toFixed(1)} 分鐘 ${p5Details.length ? `[${p5Details.join(', ')}]` : ''}<br>
+            • 第 6 部份 (Remark): ${part6.toFixed(1)} 分鐘<br>
+            ------------------------------------<br>
+            <strong>不包含掛號郵件派遞時間 (1+2+3+5+6): ${partGroupA.toFixed(1)} 分鐘</strong><br><br>
+            • 掛號郵件派遞時間 (第 4 部份): ${part4.toFixed(1)} 分鐘<br>
+            ------------------------------------<br>
+            <strong>最終派遞時間: ${totalOT.toFixed(1)} 分鐘</strong>
+        `;
+
+        // 建議如何改變小郵包或薄雞實際數量達到 1小時、1.5小時 和 2小時
+        let targets = [60, 90, 120];
+        let targetLabels = ["1 小時 (60分鐘)", "1.5 小時 (90分鐘)", "2 小時 (120分鐘)"];
+        let recHTML = `<strong>💡 達到特定派遞時間的數量調整建議：</strong><br>`;
+        
+        for(let idx=0; idx<targets.length; idx++) {
+            let targetMin = targets[idx];
+            let diff = targetMin - totalOT;
+            let packetNeeded = diff / 2.0;
+            let thinNeeded = diff * (r.rateLetter || 20);
+
+            recHTML += `<div style="margin-top:6px; border-top:1px dashed #eee; padding-top:4px;">
+                <strong>目標 ${targetLabels[idx]}</strong> (相差 ${diff >= 0 ? '+' : ''}${diff.toFixed(1)} 分鐘)：<br>
+                &nbsp;&nbsp;• 需增減<strong>小郵包</strong>：${packetNeeded >= 0 ? '+' : ''}${Math.round(packetNeeded)} 件<br>
+                &nbsp;&nbsp;• 需增減<strong>薄雞信件</strong>：${thinNeeded >= 0 ? '+' : ''}${Math.round(thinNeeded)} 件
+            </div>`;
+        }
+        document.getElementById('recommendationBox').innerHTML = recHTML;
+    }
+
+    function updateCircularTable() {
+        const rates = document.querySelectorAll('.cir-rate');
+        const qtys = document.querySelectorAll('.cir-qty');
+        const timeCells = document.querySelectorAll('.cir-time-cell');
+
+        let totalQty = 0;
+        let totalTime = 0;
+
+        for(let i=0; i<10; i++) {
+            let rate = parseFloat(rates[i].value) || 0;
+            let qty = parseFloat(qtys[i].value) || 0;
+            let timeVal = rate > 0 ? (qty / rate) : 0;
+
+            timeCells[i].textContent = timeVal.toFixed(1);
+
+            totalQty += qty;
+            totalTime += timeVal;
+        }
+
+        document.getElementById('totalCircQty').textContent = `總數: ${totalQty}`;
+        document.getElementById('totalCircTime').textContent = `總數: ${totalTime.toFixed(1)} 分`;
+    }
+
+    function calculateConverter(source) {
+        let tElem = document.getElementById('convTime');
+        let qElem = document.getElementById('convQty');
+        let rElem = document.getElementById('convRate');
+
+        let t = parseFloat(tElem.value);
+        let q = parseFloat(qElem.value);
+        let r = parseFloat(rElem.value);
+
+        if (source === 'time' || source === 'qty') {
+            if (!isNaN(t) && !isNaN(q) && q > 0) {
+                r = t / q;
+                rElem.value = r.toFixed(2);
+            } else if (!isNaN(t) && !isNaN(r) && r > 0) {
+                q = t / r;
+                qElem.value = Math.round(q);
+            }
+        } else if (source === 'rate') {
+            if (!isNaN(q) && !isNaN(r)) {
+                t = q * r;
+                tElem.value = t.toFixed(1);
+            } else if (!isNaN(t) && !isNaN(r) && r > 0) {
+                q = t / r;
+                qElem.value = Math.round(q);
+            }
+        }
+    }
+
+    function resetConverter() {
+        document.getElementById('convTime').value = '';
+        document.getElementById('convQty').value = '';
+        document.getElementById('convRate').value = '';
+    }
+</script>
+
+</body>
+</html>
